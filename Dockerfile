@@ -1,4 +1,4 @@
-FROM node:16
+FROM iron/node:18.1.0-dev
 
 WORKDIR /app
 
