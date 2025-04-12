@@ -16,7 +16,7 @@ const payload1 = {
     { role: 'system', content: 'You are an AI bot.' },
     {
       role: 'user',
-      content: 'Enter your prompt here. '.repeat(50),
+      content: 'Enter your prompt here. '.repeat(200),
     },
   ],
   temperature: 0.7,
@@ -36,7 +36,7 @@ const payload2 = {
     { role: 'system', content: 'You are an AI bot.' },
     {
       role: 'user',
-      content: 'Enter your prompt here. '.repeat(50),
+      content: 'Enter your prompt here. '.repeat(200),
     },
   ],
   temperature: 0.7,
