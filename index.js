@@ -14,7 +14,10 @@ const payload1 = {
   model: 'fake-azure-openai/gpt-3-5',
   messages: [
     { role: 'system', content: 'You are an AI bot.' },
-    { role: 'user', content: 'Enter your prompt here' },
+    {
+      role: 'user',
+      content: 'Enter your prompt here. '.repeat(50),
+    },
   ],
   temperature: 0.7,
   max_tokens: 256,
@@ -31,7 +34,10 @@ const payload2 = {
   model: 'openai-fake-provider/gpt-3-5',
   messages: [
     { role: 'system', content: 'You are an AI bot.' },
-    { role: 'user', content: 'Enter your prompt here' },
+    {
+      role: 'user',
+      content: 'Enter your prompt here. '.repeat(50),
+    },
   ],
   temperature: 0.7,
   max_tokens: 256,
