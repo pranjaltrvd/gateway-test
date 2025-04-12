@@ -1,4 +1,4 @@
-FROM iron/node:18.1.0-dev
+FROM node:22-bullseye
 
 WORKDIR /app
 

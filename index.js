@@ -58,14 +58,19 @@ async function callEndpoint(endpoint, payload) {
 
 async function main() {
   let toggle = true;
-  const interval = 100;
+  const totalRPS = 100;
+  const intervals = 10;
+  const requestsPerInterval = totalRPS / intervals;
+  const intervalTime = 1000 / requestsPerInterval;
 
-  setInterval(() => {
-    const payload = toggle ? payload1 : payload2;
-    callEndpoint(endpoint, payload);
-    toggle = !toggle; // Alternate between endpoints
-    streamToggle = !streamToggle; // Toggle the stream parameter
-  }, interval);
+  for (let i = 0; i < intervals; i++) {
+    setInterval(() => {
+      const payload = toggle ? payload1 : payload2;
+      callEndpoint(endpoint, payload);
+      toggle = !toggle;
+      streamToggle = !streamToggle;
+    }, intervalTime);
+  }
 }
 
 main();
