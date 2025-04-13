@@ -10,73 +10,60 @@ const headers = {
   'X-TFY-METADATA': '{"tfy_log_request":"true"}',
 };
 
-const payload1 = {
-  model: 'fake-azure-openai/gpt-3-5',
-  messages: [
-    { role: 'system', content: 'You are an AI bot.' },
-    {
-      role: 'user',
-      content: 'Enter your prompt here. '.repeat(200),
-    },
-  ],
-  temperature: 0.7,
-  max_tokens: 256,
-  top_p: 0.8,
-  top_k: 50,
-  frequency_penalty: 0,
-  presence_penalty: 0,
-  repetition_penalty: 1,
-  stop: ['</s>'],
-  stream: false,
-};
+const payloadSize = parseInt(process.env.PAYLOAD_SIZE || '200', 10);
 
-const payload2 = {
-  model: 'openai-fake-provider/gpt-3-5',
-  messages: [
-    { role: 'system', content: 'You are an AI bot.' },
-    {
-      role: 'user',
-      content: 'Enter your prompt here. '.repeat(200),
-    },
-  ],
-  temperature: 0.7,
-  max_tokens: 256,
-  top_p: 0.8,
-  top_k: 50,
-  frequency_penalty: 0,
-  presence_penalty: 0,
-  repetition_penalty: 1,
-  stop: ['</s>'],
-  stream: false,
-};
+function createPayload(providerName, streamMode) {
+  return {
+    model: `${providerName}/gpt-3-5`,
+    messages: [
+      { role: 'system', content: 'You are an AI bot.' },
+      {
+        role: 'user',
+        content: 'Enter your prompt here. '.repeat(payloadSize),
+      },
+    ],
+    temperature: 0.7,
+    max_tokens: 256,
+    top_p: 0.8,
+    top_k: 50,
+    frequency_penalty: 0,
+    presence_penalty: 0,
+    repetition_penalty: 1,
+    stop: ['</s>'],
+    stream: streamMode,
+  };
+}
 
-let streamToggle = false;
-
-async function callEndpoint(endpoint, payload) {
+async function callEndpoint(endpoint, providerName, useStream) {
   try {
-    payload.stream = streamToggle;
+    const payload = createPayload(providerName, useStream);
     const response = await axios.post(endpoint, payload, { headers });
-    console.log(`Response from ${endpoint}:`, response.data);
   } catch (error) {
-    console.error(`Error calling ${endpoint}:`, error.message);
+    console.error(
+      `Error calling ${endpoint} with provider ${providerName} (stream=${useStream}):`,
+      error.message
+    );
   }
 }
 
 async function main() {
-  let toggle = true;
-  const totalRPS = 100;
-  const intervals = 10;
-  const requestsPerInterval = totalRPS / intervals;
-  const intervalTime = 1000 / requestsPerInterval;
+  const totalRPS = parseInt(process.env.TOTAL_RPS || '10', 10);
+  const delayBetweenRequests = 1000 / totalRPS;
 
-  for (let i = 0; i < intervals; i++) {
-    setInterval(() => {
-      const payload = toggle ? payload1 : payload2;
-      callEndpoint(endpoint, payload);
-      toggle = !toggle;
-      streamToggle = !streamToggle;
-    }, intervalTime);
-  }
+  const providers = ['fake-azure-openai', 'openai-fake-provider'];
+
+  let requestCounter = 0;
+
+  setInterval(() => {
+    const providerIndex = requestCounter % providers.length;
+    const providerName = providers[providerIndex];
+    
+    const useStream = requestCounter % 4 < 2 ? true : false;
+    
+    callEndpoint(endpoint, providerName, useStream);
+    
+    requestCounter++;
+  }, delayBetweenRequests);
 }
 
 main();
