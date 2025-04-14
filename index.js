@@ -7,7 +7,9 @@ const endpoint =
 const headers = {
   'Content-Type': 'application/json',
   Authorization: `Bearer ${process.env.API_KEY}`,
-  'X-TFY-METADATA': '{"tfy_log_request":"true"}',
+  'X-TFY-METADATA': `{"tfy_log_request":"${
+    process.env.TFY_LOG_REQUEST || 'true'
+  }"}`,
 };
 
 const payloadSize = parseInt(process.env.PAYLOAD_SIZE || '200', 10);
@@ -57,11 +59,11 @@ async function main() {
   setInterval(() => {
     const providerIndex = requestCounter % providers.length;
     const providerName = providers[providerIndex];
-    
+
     const useStream = requestCounter % 4 < 2 ? true : false;
-    
+
     callEndpoint(endpoint, providerName, useStream);
-    
+
     requestCounter++;
   }, delayBetweenRequests);
 }
