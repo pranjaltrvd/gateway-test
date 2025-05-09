@@ -19,7 +19,7 @@ rules:
   - id: load-testing-fallback
     when:
       models:
-        - openai-fake-provider/gpt-4
+        - openai-fake-provider/gpt-3-5-turbo
       response_status_codes:
         - 401
     fallback_models:
