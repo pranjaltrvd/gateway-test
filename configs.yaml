@@ -1,0 +1,39 @@
+# Rate limiting configuration
+name: ratelimiting-config
+type: gateway-rate-limiting-config
+rules:
+  - id: load-testing-rate-limit
+    unit: requests_per_hour
+    when:
+      models:
+        - openai-fake-provider/gpt-3-5-turbo
+      subjects:
+        - user:pranjal@truefoundry.com
+    limit_to: 520000
+
+
+# Model fallback configuration
+name: model-fallback-config
+type: gateway-fallback-config
+rules:
+  - id: load-testing-fallback
+    when:
+      models:
+        - openai-fake-provider/gpt-4
+      response_status_codes:
+        - 401
+    fallback_models:
+      - target: fake-azure-openai/gpt-3-5
+
+# Load balancing configuration
+name: loadbalancing-config
+type: gateway-load-balancing-config
+rules:
+  - id: load-testing-latency-rule
+    type: latency-based-routing
+    when:
+      models:
+        - gpt-3-5
+    load_balance_targets:
+      - target: openai-fake-provider/o4-mini
+      - target: openai-fake-provider/gpt-3-5
