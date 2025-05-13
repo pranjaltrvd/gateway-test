@@ -172,7 +172,7 @@ async function main() {
       const modelIndex = requestCounter % models.length;
       const modelName = models[modelIndex];
 
-      const useStream = requestCounter % 4 < 2;
+      const useStream = noLatencyMode ? false : requestCounter % 4 < 2;
 
       promises.push(callEndpoint(endpoint, modelName, useStream));
 
