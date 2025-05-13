@@ -1,7 +1,61 @@
 require('dotenv').config();
 const axios = require('axios');
 
-const endpoint =
+class LatencyTracker {
+  constructor(windowSizeMs = 5000) {
+    this.windowSizeMs = windowSizeMs;
+    this.latencies = [];
+    this.lastReportTime = performance.now();
+  }
+
+  addLatency(latencyMs) {
+    const now = performance.now();
+    this.latencies.push({
+      timestamp: now,
+      value: latencyMs
+    });
+
+    // Clean up old entries
+    this.latencies = this.latencies.filter(entry => now - entry.timestamp < this.windowSizeMs);
+
+    // Report stats every window size
+    if (now - this.lastReportTime >= this.windowSizeMs) {
+      this.reportStats();
+      this.lastReportTime = now;
+    }
+  }
+
+  calculatePercentile(percentile) {
+    if (this.latencies.length === 0) return 0;
+
+    const values = this.latencies.map(entry => entry.value).sort((a, b) => a - b);
+    const index = Math.ceil((percentile / 100) * values.length) - 1;
+    return values[Math.max(0, index)];
+  }
+
+  reportStats() {
+    if (this.latencies.length === 0) {
+      console.log("No latency data available yet");
+      return;
+    }
+
+    const values = this.latencies.map(entry => entry.value);
+    const sum = values.reduce((acc, val) => acc + val, 0);
+    const avg = sum / values.length;
+    const p90 = this.calculatePercentile(90);
+    const p99 = this.calculatePercentile(99);
+
+    console.log(`\n--- Latency Stats (${this.latencies.length} requests in last ${this.windowSizeMs / 1000}s) ---`);
+    console.log(`Average: ${avg.toFixed(2)}ms`);
+    console.log(`P90: ${p90.toFixed(2)}ms`);
+    console.log(`P99: ${p99.toFixed(2)}ms`);
+    console.log("------------------------------");
+  }
+}
+
+const latencyTracker = new LatencyTracker(5000);
+
+const endpoint = process.env.ENDPOINT ||
   'https://internal.devtest.truefoundry.tech/api/llm/api/inference/openai/chat/completions';
 
 const headers = {
@@ -79,10 +133,15 @@ function createPayload(modelName, streamMode) {
 }
 
 async function callEndpoint(endpoint, modelName, useStream) {
+  const startTime = performance.now();
   try {
     const payload = createPayload(modelName, useStream);
     await axios.post(endpoint, payload, { headers });
+    const latency = performance.now() - startTime;
+    latencyTracker.addLatency(latency);
   } catch (error) {
+    const latency = performance.now() - startTime;
+    latencyTracker.addLatency(latency);
     console.error(
       `Error calling ${endpoint} with model ${modelName} (stream=${useStream}):`,
       error.message
@@ -97,7 +156,12 @@ async function main() {
   const batchesPerSecond = totalRPS / batchSize;
   const delayBetweenBatches = 1000 / batchesPerSecond;
 
-  const models = ['openai-fake-provider/gpt-3-5-turbo', 'openai-fake-provider/gpt-4', 'gpt-3-5'];
+  const noLatencyMode = process.env.NO_LATENCY_MODE === 'true';
+
+  const models = noLatencyMode
+    ? ['openai-fake-provider/no-latency-model']
+    : ['openai-fake-provider/gpt-3-5-turbo', 'openai-fake-provider/gpt-4', 'gpt-3-5'];
+
 
   let requestCounter = 0;
 
