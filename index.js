@@ -150,7 +150,7 @@ async function callEndpoint(endpoint, modelName, useStream) {
 }
 
 async function main() {
-  const totalRPS = parseInt(process.env.TOTAL_RPS || '500', 10);
+  const totalRPS = parseInt(process.env.TOTAL_RPS || '5', 10);
 
   const batchSize = 10;
   const batchesPerSecond = totalRPS / batchSize;
@@ -160,7 +160,7 @@ async function main() {
 
   const models = noLatencyMode
     ? ['openai-fake-provider/no-latency-model']
-    : ['openai-fake-provider/gpt-3-5-turbo', 'openai-fake-provider/gpt-4', 'gpt-3-5'];
+    : ['openai-demo/gpt-3-5-turbo', 'openai-demo/gpt-4', 'gpt-3-5'];
 
 
   let requestCounter = 0;
